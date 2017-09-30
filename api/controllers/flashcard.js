@@ -4,25 +4,27 @@ const _ = require('lodash');
 const db = require('../../db');
 
 module.exports = {
-  createDeck,
-  listDecks,
-  retrieveDeck,
-  patchDeck,
-  deleteDeck
+  createFlashcard,
+  listFlashcards,
+  retrieveFlashcard,
+  patchFlashcard,
+  deleteFlashcard
 };
 
-function createDeck(request, response) {
+function createFlashcard(request, response) {
   (async function() {
 
+    const deck_id = request.swagger.params.id.value;
     let insertResult = undefined;
     const attributes = request.body.data.attributes;
     const data = Object.assign({}, attributes, {
-      owner_id: request.credentials.id
+      owner_id: request.credentials.id,
+      deck_id,
     });
 
     try {
       insertResult = await db.insert(data)
-                             .into('deck')
+                             .into('flashcard')
                              .returning('*');
     } catch(err) {
       return response.status(400)
@@ -36,7 +38,7 @@ function createDeck(request, response) {
 
       return response.json({
         data: {
-          type: 'deck',
+          type: 'flashcard',
           id: row.id,
           attributes: _.omit(row, 'id')
         }
@@ -47,16 +49,18 @@ function createDeck(request, response) {
   }());
 }
 
-function listDecks(request, response) {
+function listFlashcards(request, response) {
   (async function() {
     
+    const deck_id = request.swagger.params.id.value;
     let selectResult = undefined;
     let owner_id = request.credentials.id;
 
     try {
       selectResult = await db.select('*')
-                             .from('deck')
+                             .from('flashcard')
                              .where({
+                               deck_id,
                                owner_id,
                              });
     } catch(err) {
@@ -71,7 +75,7 @@ function listDecks(request, response) {
       return response.json({
         data: selectResult.map(row => {
           return {
-            type: 'deck',
+            type: 'flashcard',
             id: row.id,
             attributes: _.omit(row, 'id')
           };
@@ -84,7 +88,7 @@ function listDecks(request, response) {
   }());
 }
 
-function retrieveDeck(request, response) {
+function retrieveFlashcard(request, response) {
   (async function() {
     const id = request.swagger.params.id.value;
     const owner_id = request.credentials.id;
@@ -92,7 +96,7 @@ function retrieveDeck(request, response) {
 
     try {
       selectResult = await db.select('*')
-                             .from('deck')
+                             .from('flashcard')
                              .where({
                                id,
                                owner_id
@@ -107,7 +111,7 @@ function retrieveDeck(request, response) {
 
       return response.json({
         data: {
-          type: 'deck',
+          type: 'flashcard',
           id: row.id,
           attributes: _.omit(row, 'id')
         }
@@ -118,7 +122,7 @@ function retrieveDeck(request, response) {
   }());
 }
 
-function patchDeck(request, response) {
+function patchFlashcard(request, response) {
   (async function() {
     const id = request.swagger.params.id.value;
     const payload = request.body;
@@ -127,7 +131,7 @@ function patchDeck(request, response) {
 
     try {
       updateResult = await db.update(payload.data.attributes)
-                             .from('deck')
+                             .from('flashcard')
                              .where({
                                id,
                                owner_id
@@ -143,7 +147,7 @@ function patchDeck(request, response) {
 
       return response.json({
         data: {
-          type: 'deck',
+          type: 'flashcard',
           id: row.id,
           attributes: _.omit(row, 'id')
         }
@@ -154,14 +158,14 @@ function patchDeck(request, response) {
   }());
 }
 
-function deleteDeck(request, response) {
+function deleteFlashcard(request, response) {
   (async function() {
     const id = request.swagger.params.id.value;
     const owner_id = request.credentials.id;
 
     try {
       let anything = await db.del()
-                             .from('deck')
+                             .from('flashcard')
                              .where({
                                id,
                                owner_id

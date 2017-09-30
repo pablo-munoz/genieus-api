@@ -106,17 +106,210 @@ paths:
           description: The decks data
           required: true
           schema:
-            $ref: "#/definitions/deck"
+            $ref: "#/definitions/SingleDeck"
       responses:
         "200":
           description: Success
           schema:
-            $ref: "#/definitions/deck"
+            $ref: "#/definitions/SingleDeck"
         default:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
-
+    get:
+      security:
+        - Bearer: []
+      description: List the decks associated with an account
+      operationId: listDecks
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/DeckList"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /deck/{id}:
+    x-swagger-router-controller: deck
+    get:
+      security:
+        - Bearer: []
+      description: Retrieve a single deck by its id
+      operationId: retrieveDeck
+      parameters:
+        - name: id
+          in: path
+          description: The id of the deck
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SingleDeck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    patch:
+      security:
+        - Bearer: []
+      description: Retrieve a single deck by its id
+      operationId: patchDeck
+      parameters:
+        - name: id
+          in: path
+          description: The id of the deck
+          required: true
+          type: string
+        - name: payload
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/SingleDeck"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SingleDeck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"            
+    delete:
+      security:
+        - Bearer: []
+      description: Retrieve a single deck by its id
+      operationId: deleteDeck
+      parameters:
+        - name: id
+          in: path
+          description: The id of the deck
+          required: true
+          type: string
+      responses:
+        "204":
+          description: Success
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /deck/{id}/flashcards:
+    x-swagger-router-controller: flashcard
+    post:
+      security:
+        - Bearer: []
+      description: Create a flashcard
+      operationId: createFlashcard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: payload
+          in: body
+          description: The flashcard data
+          required: true
+          schema:
+            $ref: "#/definitions/SingleFlashcard"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SingleFlashcard"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      security:
+        - Bearer: []
+      description: List the flashcards associated with a deck and an account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      operationId: listFlashcards
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/FlashcardList"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /flashcard/{id}:
+    x-swagger-router-controller: flashcard
+    get:
+      security:
+        - Bearer: []
+      description: Retrieve a single flashcard by its id
+      operationId: retrieveFlashcard
+      parameters:
+        - name: id
+          in: path
+          description: The id of the flashcard
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SingleFlashcard"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    patch:
+      security:
+        - Bearer: []
+      description: Update a single flashcard by its id
+      operationId: patchFlashcard
+      parameters:
+        - name: id
+          in: path
+          description: The id of the flashcard
+          required: true
+          type: string
+        - name: payload
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/SingleFlashcard"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SingleFlashcard"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"            
+    delete:
+      security:
+        - Bearer: []
+      description: Delete a single flashcard by its id
+      operationId: deleteFlashcard
+      parameters:
+        - name: id
+          in: path
+          description: The id of the deck
+          required: true
+          type: string
+      responses:
+        "204":
+          description: Success
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"            
+            
   /swagger:
     x-swagger-pipe: swagger_raw
     
@@ -256,58 +449,96 @@ definitions:
                 
   deck:
     required:
-      - data
+      - type
+      - attributes
     properties:
-      data:
+      type:
+        type: string
+        enum:
+          - deck
+      id:
+        type: string
+        format: uuid
+      attributes:
         required:
-          - type
-          - attributes
+          - name
+          - color
         properties:
-          type:
+          name:
+            type: string
+          color:
             type: string
             enum:
-              - deck
-          id:
-            type: string
-            format: uuid
-          attributes:
-            required:
-              - name
-              - color
-            properties:
-              name:
-                type: string
-              color:
-                type: string
-                
-  flashcard:
+              - red
+              - orange
+              - yellow
+              - green
+              - blue
+              - indigo
+              - violet
+              - black
+              
+  SingleDeck:
     required:
       - data
     properties:
       data:
+        $ref: "#/definitions/deck"
+                  
+  DeckList:
+    required:
+      - data
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/deck"
+                
+  Flashcard:
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum:
+          - flashcard
+      id:
+        type: string
+        format: uuid
+      attributes:
         required:
           - type
-          - id
-          - attributes
+          - front
+          - back
         properties:
           type:
             type: string
             enum:
-              - flashcard
-          id:
-            type: string
-            format: uuid
-          attributes:
-            required:
-              - type
-              - front
-              - back
+              - text
+          front:
+            type: object
             properties:
-              type:
+              text:
                 type: string
-                enum:
-                  - text
-              front:
-                type: object
-              back:
-                type: object
+          back:
+            type: object
+            properties:
+              text:
+                type: string
+            
+  SingleFlashcard:
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/Flashcard"
+        
+  FlashcardList:
+    required:
+      - data
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/Flashcard"
