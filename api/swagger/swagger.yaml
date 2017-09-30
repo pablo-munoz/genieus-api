@@ -1,0 +1,313 @@
+swagger: "2.0"
+
+info:
+  version: "0.0.1"
+  title: Hello World App
+  
+# during dev, should point to your local machine
+host: localhost:5000
+# basePath prefixes all resource paths 
+basePath: /
+
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+  
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+  
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+  
+paths:
+  /hello:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: hello_world
+    get:
+      description: Returns 'Hello' to the caller
+      # used as the method name of the controller
+      operationId: hello
+      parameters:
+        - name: name
+          in: query
+          description: The name of the person to whom to say hello
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/HelloWorldResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /account:
+    x-swagger-router-controller: account
+    post:
+      description: Creates a user account
+      operationId: createAccount
+      parameters:
+        - name: payload
+          in: body
+          description: The account credentials
+          required: true
+          schema:
+            $ref: "#/definitions/account_registration"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/account"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /session:
+    x-swagger-router-controller: session
+    post:
+      description: Create a session (obtain a json web token)
+      operationId: createSession
+      parameters:
+        - name: payload
+          in: body
+          description: The account credentials (email and password)
+          required: true
+          schema:
+            $ref: "#/definitions/session_post_form"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/session"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /deck:
+    x-swagger-router-controller: deck
+    post:
+      security:
+        - Bearer: []
+      description: Create a deck
+      operationId: createDeck
+      parameters:
+        - name: payload
+          in: body
+          description: The decks data
+          required: true
+          schema:
+            $ref: "#/definitions/deck"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/deck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /swagger:
+    x-swagger-pipe: swagger_raw
+    
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    in: header
+    name: Authorization
+    
+# complex objects have schema definitions
+definitions:
+  HelloWorldResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+        
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+        
+  session_post_form:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - attributes
+        properties:
+          type:
+            type: string
+            enum: ['account']
+          attributes:
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+                format: password
+        
+  session:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - id
+          - attributes
+        properties:
+          type:
+            type: string
+          id:
+            type: string
+            format: uuid
+          attributes:
+            required:
+              - date_created
+              - json_web_token
+              - expiration
+            properties:
+              date_created:
+                type: string
+                format: date-time
+              json_web_token:
+                type: string
+              expiration:
+                type: string
+                format: date-time
+                
+  account_registration:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - attributes
+        properties:
+          type:
+            type: string
+            enum:
+              - account
+          id:
+            type: string
+            format: uuid
+          attributes:
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+                format: password 
+                
+  account:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - attributes
+        properties:
+          type:
+            type: string
+            enum:
+              - account
+          id:
+            type: string
+            format: uuid
+          attributes:
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+              date_created:
+                type: string
+                format: date-time
+              last_login:
+                type: string
+                format: date-time
+                
+  deck:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - attributes
+        properties:
+          type:
+            type: string
+            enum:
+              - deck
+          id:
+            type: string
+            format: uuid
+          attributes:
+            required:
+              - name
+              - color
+            properties:
+              name:
+                type: string
+              color:
+                type: string
+                
+  flashcard:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - id
+          - attributes
+        properties:
+          type:
+            type: string
+            enum:
+              - flashcard
+          id:
+            type: string
+            format: uuid
+          attributes:
+            required:
+              - type
+              - front
+              - back
+            properties:
+              type:
+                type: string
+                enum:
+                  - text
+              front:
+                type: object
+              back:
+                type: object

@@ -1,0 +1,15 @@
+version: '3'
+services:
+  database:
+    build: /Users/pablo/developer/genieus/genieus-db
+    ports:
+      - 5432:5432
+
+  api:
+    build: .
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/genieus-api
+    depends_on:
+      - database
