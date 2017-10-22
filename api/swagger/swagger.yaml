@@ -2,14 +2,13 @@ swagger: "2.0"
 
 info:
   version: "0.0.1"
-  title: Hello World App
+  title: Genieus API
   
 # during dev, should point to your local machine
 host: localhost:5000
 # basePath prefixes all resource paths 
 basePath: /
 
-# 
 schemes:
   # tip: remove http to make production-grade
   - http
@@ -49,9 +48,34 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
             
+  /echo:
+    x-swagger-router-controller: misc
+    post:
+      description: Responds with whatever json is send
+      operationId: echo
+      parameters:
+        - name: payload
+          in: body
+          description: Some JSON, the same will be returned.
+          required: true
+          schema:
+            type: object
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: object
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
   /account:
     x-swagger-router-controller: account
     post:
+      tags:
+        - account
+        - create
       description: Creates a user account
       operationId: createAccount
       parameters:
@@ -74,6 +98,9 @@ paths:
   /session:
     x-swagger-router-controller: session
     post:
+      tags:
+        - session
+        - create
       description: Create a session (obtain a json web token)
       operationId: createSession
       parameters:
@@ -96,6 +123,9 @@ paths:
   /deck:
     x-swagger-router-controller: deck
     post:
+      tags:
+        - deck
+        - create
       security:
         - Bearer: []
       description: Create a deck
@@ -117,6 +147,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     get:
+      tags:
+        - deck
+        - list
       security:
         - Bearer: []
       description: List the decks associated with an account
@@ -134,6 +167,9 @@ paths:
   /deck/{id}:
     x-swagger-router-controller: deck
     get:
+      tags:
+        - deck
+        - retrieve
       security:
         - Bearer: []
       description: Retrieve a single deck by its id
@@ -143,6 +179,12 @@ paths:
           in: path
           description: The id of the deck
           required: true
+          type: string
+        - name: include
+          in: query
+          description: >
+            Name of related resource to include in response.
+          enum: ['flashcard']
           type: string
       responses:
         "200":
@@ -154,6 +196,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     patch:
+      tags:
+        - deck
+        - update
       security:
         - Bearer: []
       description: Retrieve a single deck by its id
@@ -179,6 +224,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"            
     delete:
+      tags:
+        - deck
+        - delete
       security:
         - Bearer: []
       description: Retrieve a single deck by its id
@@ -190,8 +238,25 @@ paths:
           required: true
           type: string
       responses:
-        "204":
+        "200":
           description: Success
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                required:
+                  - type
+                  - id
+                properties:
+                  type:
+                    type: string
+                    enum: ['deck']
+                  id:
+                    type: string
+                    format: uuid
+              
         default:
           description: Error
           schema:
@@ -200,6 +265,9 @@ paths:
   /deck/{id}/flashcards:
     x-swagger-router-controller: flashcard
     post:
+      tags:
+        - flashcard
+        - create
       security:
         - Bearer: []
       description: Create a flashcard
@@ -225,6 +293,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     get:
+      tags:
+        - flashcard
+        - retrieve
       security:
         - Bearer: []
       description: List the flashcards associated with a deck and an account
@@ -247,6 +318,9 @@ paths:
   /flashcard/{id}:
     x-swagger-router-controller: flashcard
     get:
+      tags:
+        - flashcard
+        - retrieve
       security:
         - Bearer: []
       description: Retrieve a single flashcard by its id
@@ -267,6 +341,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
     patch:
+      tags:
+        - flashcard
+        - update
       security:
         - Bearer: []
       description: Update a single flashcard by its id
@@ -292,6 +369,9 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"            
     delete:
+      tags:
+        - flashcard
+        - delete
       security:
         - Bearer: []
       description: Delete a single flashcard by its id
@@ -303,12 +383,167 @@ paths:
           required: true
           type: string
       responses:
-        "204":
+        "200":
           description: Success
+          schema:
+            required:
+              - data
+            properties:
+              data:
+                required:
+                  - type
+                  - id
+                properties:
+                  type:
+                    type: string
+                    enum: ['flashcard']
+                  id:
+                    type: string
+                    format: uuid
         default:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"            
+            
+  /quiz:
+    x-swagger-router-controller: quiz
+    get:
+      description: Create a quiz
+      tags:
+        - quiz
+        - create
+      security:
+         - Bearer: []
+      operationId: createQuiz
+      responses:
+        "200":
+          description: >
+            Returns a Quiz resource which can be used to obtain the next
+            or n next flashcards to show to a user, mark self evaluations,
+            etc.
+          schema:
+            $ref: "#/definitions/Quiz"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /quiz/{id}:
+    x-swagger-router-controller: quiz
+    get:
+      description: Create a quiz with flashcards from a specific deck
+      tags:
+        - quiz
+        - create
+      security:
+         - Bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: Id of the deck to run a quiz about
+      operationId: retrieveQuizOfDeckFlashcards
+      responses:
+        "200":
+          description: >
+            Returns a Quiz resource which can be used to obtain the next
+            or n next flashcards to show to a user, mark self evaluations,
+            etc.
+          schema:
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/definitions/Flashcard"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+            
+  /quiz/{id}/flashcards:
+    x-swagger-router-controller: quiz
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: string
+        description: The id of the quiz
+    get:
+      description: List the flashcards for a given quiz
+      tags:
+        - quiz
+        - retrieve
+      security:
+        - Bearer: []
+      operationId: retrieveQuizFlashcards
+      responses:
+        "200":
+          description: The flashcards to show in a quiz
+          schema:
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/definitions/Flashcard"
+
+
+  /community/search:
+    x-swagger-router-controller: community
+    get:
+      tags:
+        - community
+        - retrieve
+      parameters:
+        - name: q
+          in: query
+          type: string
+          description: The search terms 
+      operationId: searchPublicDecks
+      responses:
+        "200":
+          description: The public decks that match a certain criteria (query)
+          schema:
+            required:
+              - data
+            properties:
+              data:
+                type: array
+              items:
+                $ref: "#/definitions/deck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+
+  /community/add:
+    x-swagger-router-controller: community
+    post:
+      parameters:
+      - name: payload
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+        description: An object that describes the addition request
+      tags:
+        - community
+      security:
+        - Bearer: []
+      operationId: addPublicDeckToUserCollection
+      responses:
+        "200":
+          description: The public decks that match a certain criteria (query)
+          schema:
+            $ref: "#/definitions/SingleDeck"
             
   /swagger:
     x-swagger-pipe: swagger_raw
@@ -503,9 +738,6 @@ definitions:
         type: string
         enum:
           - flashcard
-      id:
-        type: string
-        format: uuid
       attributes:
         required:
           - type
@@ -542,3 +774,19 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Flashcard"
+          
+  Quiz:
+    required:
+      - data
+    properties:
+      data:
+        required:
+          - type
+          - id
+        properties:
+          type:
+            type: string
+            enum: ['quiz']
+          id:
+            type: string
+            format: uuid

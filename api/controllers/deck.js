@@ -97,6 +97,16 @@ function retrieveDeck(request, response) {
                                id,
                                owner_id
                              });
+
+      if (request.query.include !== undefined
+          && request.query.include === 'flashcard') {
+        selectResult.related = await db.select('*')
+                                       .from('flashcard')
+                                       .where({
+                                         deck_id: id
+                                       });
+      }
+
     } catch(err) {
       console.error(err);
       return response.status(400).json({ message: err });
@@ -105,13 +115,33 @@ function retrieveDeck(request, response) {
     if (selectResult.length) {
       const row = selectResult[0];
 
-      return response.json({
+      let responseJSON = {
         data: {
           type: 'deck',
           id: row.id,
           attributes: _.omit(row, 'id')
         }
-      });
+      };
+
+      if (selectResult.related !== undefined) {
+        _.extend(responseJSON, {
+          relationships: {
+            flashcard: {
+              links: {
+                self: 'self',
+                related: 'related'
+              },
+              data: selectResult.related.map( flashcard => ({
+                type: 'flashcard',
+                id: flashcard.id,
+                attributes: _.omit(flashcard, 'id')
+              }))
+            }
+          }
+        });
+      }
+
+      return response.json(responseJSON);
     } else {
       return response.status(400).end();
     }
@@ -166,7 +196,12 @@ function deleteDeck(request, response) {
                                id,
                                owner_id
                              });
-      return response.status(204).end();
+      return response.status(200).json({
+        data: {
+          type: 'deck',
+          id,
+        }
+      });
     } catch(err) {
       return response.status(400).end();
     }

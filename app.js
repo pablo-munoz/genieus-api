@@ -1,9 +1,14 @@
 'use strict';
 
 const cors = require('cors');
+const fs = require('fs');
 const SwaggerExpress = require('swagger-express-mw');
 const app = require('express')();
 const jwt = require('./api/utils/jwt');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('js-yaml');
+const swaggerDocumentRaw = fs.readFileSync('./api/swagger/swagger.yaml', 'utf-8');
+const swaggerDocument = YAML.load(swaggerDocumentRaw);
 module.exports = app; // for testing
 
 const config = {
@@ -34,6 +39,7 @@ const config = {
 };
 
 app.use(cors());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (err) { throw err; }

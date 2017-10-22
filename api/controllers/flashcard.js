@@ -170,7 +170,12 @@ function deleteFlashcard(request, response) {
                                id,
                                owner_id
                              });
-      return response.status(204).end();
+      return response.json({
+        data: {
+          type: 'flashcard',
+          id,
+        }
+      });
     } catch(err) {
       return response.status(400).end();
     }
