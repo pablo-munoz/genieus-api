@@ -163,6 +163,22 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
+    options:
+      tags:
+        - deck
+        - meta
+      description: Give information about the Deck resource
+      operationId: metadataOfDecks
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: object
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        
             
   /deck/{id}:
     x-swagger-router-controller: deck
@@ -520,6 +536,34 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
 
+  /community/author/{authorId}:
+    x-swagger-router-controller: community
+    get:
+      tags:
+        - community
+        - retrieve
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          type: string
+          description: The search terms 
+      operationId: getPublicDecksOfAuthor
+      responses:
+        "200":
+          description: The public decks written by a certain author
+          schema:
+            required:
+              - data
+            properties:
+              data:
+                type: array
+              items:
+                $ref: "#/definitions/deck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
 
   /community/add:
     x-swagger-router-controller: community
@@ -544,6 +588,37 @@ paths:
           description: The public decks that match a certain criteria (query)
           schema:
             $ref: "#/definitions/SingleDeck"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+
+  /flashcard/{id}/review:
+    x-swagger-router-controller: flashcard
+    post:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: payload
+          in: body
+          required: true
+          schema:
+            type: object
+      security:
+        - Bearer: []
+      operationId: recordFlashcardReview
+      responses:
+        "200":
+          description: The review object
+          schema:
+            type: object
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
             
   /swagger:
     x-swagger-pipe: swagger_raw
@@ -671,10 +746,13 @@ definitions:
           attributes:
             required:
               - email
+              - username
             properties:
               email:
                 type: string
                 format: email
+              username:
+                type: string
               date_created:
                 type: string
                 format: date-time
@@ -700,6 +778,8 @@ definitions:
           - color
         properties:
           name:
+            type: string
+          description:
             type: string
           color:
             type: string

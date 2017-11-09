@@ -1,7 +1,7 @@
 version: '3'
 services:
   database:
-    build: /Users/pablo/developer/genieus/genieus-db
+    image: pmunoz/genieus-db:development
     ports:
       - 5432:5432
 

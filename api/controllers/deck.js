@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const db = require('../../db');
+const { SWAGGER_EXPRESS } = require('../../swagger.js');
 
 module.exports = {
   createDeck,
@@ -206,4 +207,8 @@ function deleteDeck(request, response) {
       return response.status(400).end();
     }
   }());
+}
+
+function metadataOfDecks(request, response) {
+  response.json(SWAGGER_EXPRESS.runner.swagger.definitions['deck']);
 }

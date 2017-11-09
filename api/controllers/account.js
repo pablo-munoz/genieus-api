@@ -15,9 +15,9 @@ function createAccount(request, response) {
 
     try {
       insertResult = await db.raw(`
-INSERT INTO account (email, password) VALUES
-(:email, crypt(:password, gen_salt('bf', 8)))
-RETURNING id, email, date_created, last_login
+INSERT INTO account (email, username, password) VALUES
+(:email, :username, crypt(:password, gen_salt('bf', 8)))
+RETURNING id, email, username, date_created, last_login
         `, attributes);
     } catch(err) {
       console.error(err);

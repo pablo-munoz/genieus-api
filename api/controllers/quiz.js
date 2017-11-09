@@ -31,8 +31,10 @@ function retrieveQuizFlashcards(request, response) {
 
       selectRows = await db.raw(`
 SELECT flashcard.* FROM flashcard
+JOIN flashcard_review_history ON flashcard_review_history.flashcard_id = flashcard.id
 JOIN deck ON flashcard.deck_id = deck.id
 AND deck.owner_id = :owner_id
+ORDER BY flashcard_review_history.avg ASC, flashcard_review_history.max ASC
         `, { owner_id: request.credentials.id });
 
     } catch(error) {

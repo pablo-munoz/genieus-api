@@ -8,7 +8,8 @@ module.exports = {
   listFlashcards,
   retrieveFlashcard,
   patchFlashcard,
-  deleteFlashcard
+  deleteFlashcard,
+  recordFlashcardReview
 };
 
 function createFlashcard(request, response) {
@@ -179,5 +180,36 @@ function deleteFlashcard(request, response) {
     } catch(err) {
       return response.status(400).end();
     }
+  }());
+}
+
+function recordFlashcardReview(request, response) {
+  (async function() {
+    const id = request.swagger.params.id.value;
+    const owner_id = request.credentials.id;
+    const payload = request.body;
+    const score = payload.score;
+
+    console.log(id);
+    console.log(score);
+
+    let insertResult = undefined;
+
+    try {
+      insertResult = await db.insert({
+        flashcard_id: id,
+        score,
+      }).into('flashcard_review')
+        .returning('*');
+    } catch(err) {
+      console.error(error);
+      return response.status(400).json({ message: error });
+    }
+
+    if (insertResult === undefined || insertResult.length === 0) {
+      return response.status(400).json({ message: 'Error inserting to databsae' });
+    }
+
+    return response.json(insertResult[0]);
   }());
 }

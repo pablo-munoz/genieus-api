@@ -16,7 +16,7 @@ function createSession(request, response) {
 
     try {
       accountSelect = await db.raw(`
-SELECT id, email, date_created, last_login FROM account
+SELECT id, email, username, date_created, last_login FROM account
 WHERE email=lower(:email) AND password=crypt(:password, password);
         `, attributes);
     } catch(err) {
@@ -27,12 +27,14 @@ WHERE email=lower(:email) AND password=crypt(:password, password);
     }
 
     if (accountSelect.rows.length) {
-      const row = accountSelect.rows[0];
+      const account = accountSelect.rows[0];
 
       const token = jwt.generateToken({
-        id: row.id,
-        email: row.email
+        id: account.id,
+        email: account.email
       });
+
+      console.log(account);
 
       return response.json({
         data: {
@@ -41,7 +43,11 @@ WHERE email=lower(:email) AND password=crypt(:password, password);
           attributes: {
             date_created: (new Date()).toISOString(),
             expiration: (new Date()).toISOString(),
-            json_web_token: token
+            json_web_token: token,
+            account: {
+              email: account.email,
+              username: account.username
+            }
           }
         }
       });
